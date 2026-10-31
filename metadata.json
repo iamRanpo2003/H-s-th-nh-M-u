@@ -2,5 +2,7 @@
   "name": "Hồ Sơ Thực Hành Tín Ngưỡng Thờ Mẫu Tam Phủ",
   "description": "Cổng thông tin bảo tồn di sản UNESCO, chuẩn hóa nghi lễ, phân biệt biến tướng và tra cứu pháp lý Tín ngưỡng thờ Mẫu Tam phủ của người Việt.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

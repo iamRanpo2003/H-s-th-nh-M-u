@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { DiSanItem, TabKey } from '../types/heritage';
+import { DiSanItem, TabKey, Language } from '../types/heritage';
+import { translations, recordTranslationsEn } from '../i18n/translations';
+import { useAudioReader } from '../context/AudioReaderContext';
 import { 
   isMissingSource, 
   formatCitation, 
@@ -24,16 +26,27 @@ import {
   X,
   FileJson,
   Layers,
-  BookOpen
+  BookOpen,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 interface HomeTabProps {
   records: DiSanItem[];
+  currentLang: Language;
   onNavigateTab: (tab: TabKey) => void;
   onAddRecord: (record: DiSanItem) => void;
 }
 
-export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddRecord }) => {
+export const HomeTab: React.FC<HomeTabProps> = ({ 
+  records, 
+  currentLang, 
+  onNavigateTab, 
+  onAddRecord 
+}) => {
+  const { speak, isSpeaking, stop, currentTitle } = useAudioReader();
+  const t = translations[currentLang].home;
+
   const [selectedLocation, setSelectedLocation] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -75,10 +88,29 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
     }, 2500);
   };
 
+  const handleSpeakCard = (item: DiSanItem) => {
+    const en = recordTranslationsEn[item.id];
+    const isEn = currentLang === 'en' && en;
+
+    const title = isEn ? en.ten_chinh_thuc : item.ten_chinh_thuc;
+    const location = isEn ? en.dia_phuong : item.dia_phuong;
+    const status = isEn ? en.tinh_trang_ghi_danh : item.tinh_trang_ghi_danh;
+    const desc = isEn ? en.mo_ta_dac_trung : item.mo_ta_dac_trung;
+    const source = isEn ? en.nguon_tu_lieu : item.nguon_tu_lieu;
+
+    const fullSpeechText = `${title}. ${isEn ? 'Location:' : 'Địa phương:'} ${location}. ${isEn ? 'Status:' : 'Tình trạng ghi danh:'} ${status}. ${desc}. ${isEn ? 'Source citation:' : 'Nguồn tư liệu:'} ${source || (isEn ? 'Missing citation' : 'Chưa có nguồn kiểm chứng')}.`;
+
+    if (isSpeaking && currentTitle === title) {
+      stop();
+    } else {
+      speak(fullSpeechText, title, currentLang);
+    }
+  };
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newForm.ten_chinh_thuc.trim()) {
-      alert('Vui lòng nhập tên chính thức của di sản!');
+      alert(currentLang === 'en' ? 'Please provide the official heritage name!' : 'Vui lòng nhập tên chính thức của di sản!');
       return;
     }
     const item: DiSanItem = {
@@ -108,19 +140,19 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
         <div className="relative z-10 max-w-4xl space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/30 text-xs font-semibold tracking-wide uppercase">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            Hệ thống Hồ sơ Khoa học & Chuẩn hóa Nghi lễ
+            {t.badge}
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-extrabold font-serif-culture tracking-wide text-amber-100 leading-tight">
-            Tín Ngưỡng Thờ Mẫu Tam Phủ Của Người Việt
+            {t.heroTitle}
           </h1>
 
           <p className="text-amber-100/90 text-sm sm:text-base leading-relaxed">
-            Tín ngưỡng thờ Mẫu Tam phủ tôn vinh Mẫu – người Mẹ bao dung của vũ trụ và thiên nhiên, kết tinh lòng biết ơn sâu sắc của người Việt đối với trời đất và các vị tiền nhân có công với đất nước. Cổng thông tin ra đời nhằm xây dựng hệ sinh thái thông tin chính thống, đẩy lùi biến tướng thương mại hóa, mê tín dị đoan và bảo tồn di sản theo đúng tinh thần Công ước UNESCO 2003.
+            {t.heroDesc}
           </p>
 
           {/* Quick Nav Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-4">
             <button
               onClick={() => onNavigateTab('rituals')}
               className="flex flex-col p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-amber-300/30 text-left transition-all group"
@@ -129,8 +161,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
                 <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-medium opacity-80">Xem</span>
               </div>
-              <span className="text-sm font-bold text-white">Nghi thức chuẩn</span>
-              <span className="text-[11px] text-amber-200/80">Không gian, y phục, văn ca</span>
+              <span className="text-sm font-bold text-white">{t.btnRituals}</span>
+              <span className="text-[11px] text-amber-200/80">{t.btnRitualsSub}</span>
             </button>
 
             <button
@@ -141,8 +173,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
                 <ShieldAlert className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-medium opacity-80">Phân biệt</span>
               </div>
-              <span className="text-sm font-bold text-white">Chống biến tướng</span>
-              <span className="text-[11px] text-amber-200/80">Đối chiếu 5 dấu hiệu đỏ</span>
+              <span className="text-sm font-bold text-white">{t.btnDistinction}</span>
+              <span className="text-[11px] text-amber-200/80">{t.btnDistinctionSub}</span>
             </button>
 
             <button
@@ -153,8 +185,20 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
                 <Scale className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-medium opacity-80">Tra cứu</span>
               </div>
-              <span className="text-sm font-bold text-white">Khung pháp lý</span>
-              <span className="text-[11px] text-amber-200/80">Luật 2016, Nghị định xử phạt</span>
+              <span className="text-sm font-bold text-white">{t.btnLegal}</span>
+              <span className="text-[11px] text-amber-200/80">{t.btnLegalSub}</span>
+            </button>
+
+            <button
+              onClick={() => onNavigateTab('sources')}
+              className="flex flex-col p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-amber-300/30 text-left transition-all group"
+            >
+              <div className="flex items-center justify-between text-emerald-300 mb-1">
+                <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-medium opacity-80">Kiểm chứng</span>
+              </div>
+              <span className="text-sm font-bold text-white">{t.btnSources}</span>
+              <span className="text-[11px] text-amber-200/80">{t.btnSourcesSub}</span>
             </button>
 
             <button
@@ -163,10 +207,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
             >
               <div className="flex items-center justify-between text-red-950 mb-1">
                 <Bot className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold">Hỏi AI</span>
+                <span className="text-xs font-bold">AI</span>
               </div>
-              <span className="text-sm font-extrabold">Trợ lý Thông minh</span>
-              <span className="text-[11px] text-red-900 font-medium">Hỏi đáp từ disan.json</span>
+              <span className="text-sm font-extrabold">{t.btnAdvisor}</span>
+              <span className="text-[11px] text-red-900 font-medium">{t.btnAdvisorSub}</span>
             </button>
           </div>
         </div>
@@ -176,10 +220,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
       <section className="bg-amber-50/70 border border-amber-200 rounded-2xl p-6 sm:p-8">
         <div className="text-center max-w-3xl mx-auto mb-8">
           <h2 className="text-xl sm:text-2xl font-bold font-serif-culture text-[#741515]">
-            Khái Quát Hệ Thống Tam Tòa Thánh Mẫu & Tứ Phủ Vạn Linh
+            {t.tamToaTitle}
           </h2>
           <p className="text-sm text-gray-700 mt-2">
-            Hệ thống thần điện Đạo Mẫu Việt Nam đại diện cho vũ trụ quan hài hòa: Trời (Thiên), Rừng núi (Nhạc), Sông nước (Thoải) và Đất (Địa).
+            {t.tamToaDesc}
           </p>
         </div>
 
@@ -188,48 +232,40 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
           <div className="bg-white rounded-xl p-5 border-t-4 border-red-600 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
               <span className="w-3 h-3 rounded-full bg-red-600"></span>
-              <span className="text-xs font-bold text-red-700 tracking-wider uppercase">Thiên Phủ (Màu Đỏ)</span>
+              <span className="text-xs font-bold text-red-700 tracking-wider uppercase">{t.realmHeaven}</span>
             </div>
-            <h3 className="font-bold text-gray-900 text-base mb-1">Mẫu Đệ Nhất Thượng Thiên</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Mẫu Liễu Hạnh / Mẫu Cửu Trùng Thanh Vân. Ngự cõi Trời, ban phúc lành, cai quản các vị thần linh vùng trời, y phục sắc đỏ thắm.
-            </p>
+            <h3 className="font-bold text-gray-900 text-base mb-1">{t.realmHeavenTitle}</h3>
+            <p className="text-xs text-gray-600 leading-relaxed">{t.realmHeavenDesc}</p>
           </div>
 
           {/* Mau De Nhi */}
           <div className="bg-white rounded-xl p-5 border-t-4 border-emerald-600 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
               <span className="w-3 h-3 rounded-full bg-emerald-600"></span>
-              <span className="text-xs font-bold text-emerald-700 tracking-wider uppercase">Nhạc Phủ (Màu Xanh)</span>
+              <span className="text-xs font-bold text-emerald-700 tracking-wider uppercase">{t.realmForest}</span>
             </div>
-            <h3 className="font-bold text-gray-900 text-base mb-1">Mẫu Đệ Nhị Thượng Ngàn</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Lê Mại Đại Vương / Diệu Tín Thiền Sư. Cai quản miền rừng núi, che chở muôn loài, thảo mộc, bách thú; y phục sắc xanh lục.
-            </p>
+            <h3 className="font-bold text-gray-900 text-base mb-1">{t.realmForestTitle}</h3>
+            <p className="text-xs text-gray-600 leading-relaxed">{t.realmForestDesc}</p>
           </div>
 
           {/* Mau De Tam */}
           <div className="bg-white rounded-xl p-5 border-t-4 border-sky-600 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
               <span className="w-3 h-3 rounded-full bg-sky-500"></span>
-              <span className="text-xs font-bold text-sky-700 tracking-wider uppercase">Thoải Phủ (Màu Trắng)</span>
+              <span className="text-xs font-bold text-sky-700 tracking-wider uppercase">{t.realmWater}</span>
             </div>
-            <h3 className="font-bold text-gray-900 text-base mb-1">Mẫu Đệ Tam Thoải Phủ</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Xích Lân Long Nữ. Cai quản sông ngòi, biển hồ, dòng nước tưới tiêu nông nghiệp; y phục sắc trắng tinh khôi thanh khiết.
-            </p>
+            <h3 className="font-bold text-gray-900 text-base mb-1">{t.realmWaterTitle}</h3>
+            <p className="text-xs text-gray-600 leading-relaxed">{t.realmWaterDesc}</p>
           </div>
 
           {/* Mau De Tu / Dia Tien */}
           <div className="bg-white rounded-xl p-5 border-t-4 border-amber-500 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
               <span className="w-3 h-3 rounded-full bg-amber-500"></span>
-              <span className="text-xs font-bold text-amber-700 tracking-wider uppercase">Địa Phủ (Màu Vàng)</span>
+              <span className="text-xs font-bold text-amber-700 tracking-wider uppercase">{t.realmEarth}</span>
             </div>
-            <h3 className="font-bold text-gray-900 text-base mb-1">Mẫu Đệ Tứ Địa Phủ</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Địa Tiên Thánh Mẫu. Cai quản đất đai, bờ cõi, thổ địa màu mỡ nuôi dưỡng sinh linh; y phục sắc vàng hoàng thổ.
-            </p>
+            <h3 className="font-bold text-gray-900 text-base mb-1">{t.realmEarthTitle}</h3>
+            <p className="text-xs text-gray-600 leading-relaxed">{t.realmEarthDesc}</p>
           </div>
         </div>
       </section>
@@ -241,11 +277,11 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
             <div className="flex items-center gap-2">
               <BookOpen className="w-6 h-6 text-[#881c1c]" />
               <h2 className="text-xl sm:text-2xl font-bold font-serif-culture text-[#741515]">
-                Kho Dữ Liệu Hồ Sơ Di Sản Thực Hành
+                {t.repoTitle}
               </h2>
             </div>
             <p className="text-xs sm:text-sm text-gray-600 mt-1">
-              Tra cứu danh mục thực hành, di tích đền phủ và lễ hội thờ Mẫu đã được xác thực tư liệu
+              {t.repoDesc}
             </p>
           </div>
 
@@ -255,7 +291,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#881c1c] text-white hover:bg-[#6b1414] text-xs font-semibold shadow-sm transition-colors"
             >
               <Plus className="w-4 h-4" />
-              <span>Nạp bản ghi mới</span>
+              <span>{t.btnNewRecord}</span>
             </button>
           </div>
         </div>
@@ -270,7 +306,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm kiếm theo tên di sản, nghệ nhân, mô tả..."
+                placeholder={t.searchPlaceholder}
                 className="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white"
               />
               {searchQuery && (
@@ -294,7 +330,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
                   onChange={(e) => setSelectedLocation(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white"
                 >
-                  <option value="ALL">Tất cả địa phương</option>
+                  <option value="ALL">{t.allLocations}</option>
                   {locations.map((loc, idx) => (
                     <option key={idx} value={loc}>
                       {loc.length > 30 ? loc.slice(0, 30) + '...' : loc}
@@ -315,7 +351,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
                   onChange={(e) => setSelectedStatus(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white"
                 >
-                  <option value="ALL">Tất cả tình trạng ghi danh</option>
+                  <option value="ALL">{t.allStatuses}</option>
                   {statuses.map((st, idx) => (
                     <option key={idx} value={st}>
                       {st.length > 35 ? st.slice(0, 35) + '...' : st}
@@ -330,7 +366,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
           <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
             <div className="flex items-center gap-1.5">
               <Filter className="w-3.5 h-3.5 text-amber-700" />
-              <span>Hiển thị: <strong>{filteredRecords.length}</strong> / {records.length} hồ sơ</span>
+              <span>{t.showing}: <strong>{filteredRecords.length}</strong> / {records.length} {t.records}</span>
               {(selectedLocation !== 'ALL' || selectedStatus !== 'ALL' || searchQuery) && (
                 <button
                   onClick={() => {
@@ -340,16 +376,16 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
                   }}
                   className="ml-2 text-red-700 hover:underline font-medium"
                 >
-                  (Xóa bộ lọc)
+                  {t.clearFilter}
                 </button>
               )}
             </div>
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center gap-1 text-emerald-800">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Đã có tư liệu nguồn
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span> {t.verifiedSource}
               </span>
               <span className="inline-flex items-center gap-1 text-amber-800">
-                <span className="w-2 h-2 rounded-full bg-amber-500"></span> Thiếu tư liệu kiểm chứng
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span> {t.missingSource}
               </span>
             </div>
           </div>
@@ -359,51 +395,84 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
         {filteredRecords.length === 0 ? (
           <div className="bg-white rounded-xl p-12 text-center border border-dashed border-gray-300">
             <Layers className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-800 text-base">Không tìm thấy hồ sơ phù hợp</h3>
+            <h3 className="font-semibold text-gray-800 text-base">{t.noResults}</h3>
             <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
-              Không có bản ghi nào trùng khớp với bộ lọc hoặc từ khóa bạn nhập. Hãy thử tìm từ khóa khác hoặc xóa bộ lọc.
+              {t.noResultsDesc}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRecords.map((item) => {
+              const en = recordTranslationsEn[item.id];
+              const isEn = currentLang === 'en' && en;
+
+              const title = isEn ? en.ten_chinh_thuc : item.ten_chinh_thuc;
+              const alias = isEn ? en.ten_goi_khac : item.ten_goi_khac;
+              const category = isEn ? en.loai_hinh : item.loai_hinh;
+              const location = isEn ? en.dia_phuong : item.dia_phuong;
+              const desc = isEn ? en.mo_ta_dac_trung : item.mo_ta_dac_trung;
+              const artists = isEn ? en.nghe_nhan_tieu_bieu : item.nghe_nhan_tieu_bieu;
+              const status = isEn ? en.tinh_trang_ghi_danh : item.tinh_trang_ghi_danh;
+              const source = isEn ? en.nguon_tu_lieu : item.nguon_tu_lieu;
+
               const missing = isMissingSource(item);
               const isCopied = copiedId === item.id;
+              const isReadingThis = isSpeaking && currentTitle === title;
 
               return (
                 <article
                   key={item.id}
                   className={`bg-white rounded-xl border transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-sm hover:shadow-md ${
-                    missing ? 'border-amber-400 ring-1 ring-amber-300' : 'border-amber-200/80 hover:border-amber-400'
+                    isReadingThis
+                      ? 'border-emerald-500 ring-2 ring-emerald-300 bg-emerald-50/20'
+                      : missing 
+                      ? 'border-amber-400 ring-1 ring-amber-300' 
+                      : 'border-amber-200/80 hover:border-amber-400'
                   }`}
                 >
                   <div className="p-5 space-y-3">
                     {/* Header badge area */}
                     <div className="flex items-start justify-between gap-2">
                       <span className="inline-block px-2.5 py-1 rounded bg-amber-100 text-amber-900 text-[11px] font-semibold">
-                        {item.loai_hinh}
+                        {category}
                       </span>
 
-                      {/* Orange warning badge if missing source - STRICT REQUIREMENT */}
-                      {missing && (
-                        <span 
-                          aria-label="Cảnh báo thiếu nguồn tư liệu"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-500 text-amber-950 font-bold text-[11px] shadow-sm animate-pulse"
+                      <div className="flex items-center gap-1.5">
+                        {/* Audio Reader button on each card */}
+                        <button
+                          type="button"
+                          onClick={() => handleSpeakCard(item)}
+                          className={`p-1.5 rounded-lg text-xs font-semibold transition-all ${
+                            isReadingThis
+                              ? 'bg-emerald-500 text-white animate-pulse'
+                              : 'bg-amber-100/70 hover:bg-amber-200 text-amber-900'
+                          }`}
+                          title={isReadingThis ? t.btnStopListen : t.btnListen}
                         >
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-950" />
-                          <span>Thiếu nguồn tư liệu</span>
-                        </span>
-                      )}
+                          {isReadingThis ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                        </button>
+
+                        {/* Orange warning badge if missing source */}
+                        {missing && (
+                          <span 
+                            aria-label={t.missingSourceBadge}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-500 text-amber-950 font-bold text-[11px] shadow-sm animate-pulse"
+                          >
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-950" />
+                            <span>{t.missingSourceBadge}</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Official Title */}
                     <div>
                       <h3 className="font-bold text-base font-serif-culture text-gray-900 leading-snug group-hover:text-red-800">
-                        {item.ten_chinh_thuc}
+                        {title}
                       </h3>
-                      {item.ten_goi_khac && (
+                      {alias && (
                         <p className="text-xs text-gray-500 mt-0.5 italic">
-                          Tên gọi khác: {item.ten_goi_khac}
+                          {t.aliasLabel}: {alias}
                         </p>
                       )}
                     </div>
@@ -412,32 +481,32 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
                     <div className="space-y-1.5 text-xs text-gray-600 pt-1">
                       <div className="flex items-start gap-1.5">
                         <MapPin className="w-3.5 h-3.5 text-red-700 flex-shrink-0 mt-0.5" />
-                        <span>{item.dia_phuong}</span>
+                        <span>{location}</span>
                       </div>
                       <div className="flex items-start gap-1.5">
                         <Award className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
-                        <span className="font-medium text-gray-800">{item.tinh_trang_ghi_danh}</span>
+                        <span className="font-medium text-gray-800">{status}</span>
                       </div>
                     </div>
 
                     {/* Description preview */}
                     <p className="text-xs text-gray-700 line-clamp-3 leading-relaxed pt-1">
-                      {item.mo_ta_dac_trung}
+                      {desc}
                     </p>
 
                     {/* Artists */}
-                    {item.nghe_nhan_tieu_bieu && (
+                    {artists && (
                       <p className="text-[11px] text-gray-500">
-                        <strong className="text-gray-700">Nghệ nhân tiêu biểu:</strong> {item.nghe_nhan_tieu_bieu}
+                        <strong className="text-gray-700">{t.artistsLabel}:</strong> {artists}
                       </p>
                     )}
 
                     {/* Source section inside card */}
                     <div className="pt-2 border-t border-gray-100">
                       <div className="text-[11px]">
-                        <span className="font-semibold text-gray-700">Nguồn tư liệu: </span>
-                        {item.nguon_tu_lieu ? (
-                          <span className="text-gray-600 italic">{item.nguon_tu_lieu}</span>
+                        <span className="font-semibold text-gray-700">{t.sourceLabel}: </span>
+                        {source ? (
+                          <span className="text-gray-600 italic">{source}</span>
                         ) : (
                           <span className="text-amber-700 font-semibold italic bg-amber-50 px-1 py-0.5 rounded">
                             Chưa cập nhật nguồn tư liệu khoa học
@@ -455,14 +524,14 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
                       className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:text-red-800 hover:bg-gray-200/70 rounded transition-colors"
                     >
                       <Eye className="w-3.5 h-3.5" />
-                      <span>Chi tiết</span>
+                      <span>{t.btnDetails}</span>
                     </button>
 
-                    {/* Copy Citation Button - STRICT REQUIREMENT */}
+                    {/* Copy Citation Button */}
                     <button
                       type="button"
                       onClick={() => handleCopyCitation(item)}
-                      title="Sao chép trích dẫn nguồn học thuật"
+                      title={t.btnCopyCitation}
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded transition-all ${
                         isCopied
                           ? 'bg-emerald-600 text-white'
@@ -472,12 +541,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
                       {isCopied ? (
                         <>
                           <Check className="w-3.5 h-3.5" />
-                          <span>Đã sao chép!</span>
+                          <span>{t.btnCopied}</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-3.5 h-3.5 text-amber-700" />
-                          <span>Sao chép trích dẫn nguồn</span>
+                          <span>{t.btnCopyCitation}</span>
                         </>
                       )}
                     </button>
@@ -493,94 +562,115 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
       {inspectRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl border-2 border-amber-300 space-y-4">
-            <div className="flex items-start justify-between gap-4 border-b pb-3">
-              <div>
-                <span className="px-2.5 py-1 rounded bg-amber-100 text-amber-900 text-xs font-bold">
-                  {inspectRecord.loai_hinh}
-                </span>
-                <h3 className="text-xl font-bold font-serif-culture text-[#741515] mt-2">
-                  {inspectRecord.ten_chinh_thuc}
-                </h3>
-                {inspectRecord.ten_goi_khac && (
-                  <p className="text-xs text-gray-500 italic">
-                    Tên gọi khác: {inspectRecord.ten_goi_khac}
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={() => setInspectRecord(null)}
-                className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            {(() => {
+              const en = recordTranslationsEn[inspectRecord.id];
+              const isEn = currentLang === 'en' && en;
+              const title = isEn ? en.ten_chinh_thuc : inspectRecord.ten_chinh_thuc;
+              const alias = isEn ? en.ten_goi_khac : inspectRecord.ten_goi_khac;
+              const category = isEn ? en.loai_hinh : inspectRecord.loai_hinh;
+              const location = isEn ? en.dia_phuong : inspectRecord.dia_phuong;
+              const desc = isEn ? en.mo_ta_dac_trung : inspectRecord.mo_ta_dac_trung;
+              const artists = isEn ? en.nghe_nhan_tieu_bieu : inspectRecord.nghe_nhan_tieu_bieu;
+              const status = isEn ? en.tinh_trang_ghi_danh : inspectRecord.tinh_trang_ghi_danh;
+              const source = isEn ? en.nguon_tu_lieu : inspectRecord.nguon_tu_lieu;
 
-            {/* Warning if missing source */}
-            {isMissingSource(inspectRecord) && (
-              <div className="p-3 bg-amber-50 border-l-4 border-amber-500 rounded text-amber-800 text-xs flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-600" />
-                <span>Bản ghi này đang thiếu trường nguồn tư liệu kiểm chứng theo tiêu chuẩn học thuật.</span>
-              </div>
-            )}
+              return (
+                <>
+                  <div className="flex items-start justify-between gap-4 border-b pb-3">
+                    <div>
+                      <span className="px-2.5 py-1 rounded bg-amber-100 text-amber-900 text-xs font-bold">
+                        {category}
+                      </span>
+                      <h3 className="text-xl font-bold font-serif-culture text-[#741515] mt-2">
+                        {title}
+                      </h3>
+                      {alias && (
+                        <p className="text-xs text-gray-500 italic">
+                          {t.aliasLabel}: {alias}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setInspectRecord(null)}
+                      className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
 
-            <div className="space-y-3 text-sm text-gray-700">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-amber-50/50 rounded-lg">
-                <div>
-                  <span className="text-xs font-semibold text-gray-500 block">Địa phương:</span>
-                  <span className="font-medium text-gray-800">{inspectRecord.dia_phuong}</span>
-                </div>
-                <div>
-                  <span className="text-xs font-semibold text-gray-500 block">Tình trạng ghi danh:</span>
-                  <span className="font-medium text-amber-900">{inspectRecord.tinh_trang_ghi_danh}</span>
-                </div>
-              </div>
+                  <div className="space-y-3 text-sm text-gray-700">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-amber-50/50 rounded-lg">
+                      <div>
+                        <span className="text-xs font-semibold text-gray-500 block">{t.locationLabel}:</span>
+                        <span className="font-medium text-gray-800">{location}</span>
+                      </div>
+                      <div>
+                        <span className="text-xs font-semibold text-gray-500 block">{t.statusLabel}:</span>
+                        <span className="font-medium text-amber-900">{status}</span>
+                      </div>
+                    </div>
 
-              <div>
-                <h4 className="font-semibold text-gray-800 mb-1">Mô tả đặc trưng thực hành:</h4>
-                <p className="text-gray-600 leading-relaxed text-sm bg-gray-50 p-3 rounded-lg border border-gray-100">
-                  {inspectRecord.mo_ta_dac_trung}
-                </p>
-              </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800 mb-1">Mô tả đặc trưng thực hành:</h4>
+                      <p className="text-gray-600 leading-relaxed text-sm bg-gray-50 p-3 rounded-lg border border-gray-100">
+                        {desc}
+                      </p>
+                    </div>
 
-              {inspectRecord.nghe_nhan_tieu_bieu && (
-                <div>
-                  <h4 className="font-semibold text-gray-800 mb-1">Nghệ nhân / Nhân chứng văn hóa tiêu biểu:</h4>
-                  <p className="text-gray-600 text-sm">
-                    {inspectRecord.nghe_nhan_tieu_bieu}
-                  </p>
-                </div>
-              )}
+                    {artists && (
+                      <div>
+                        <h4 className="font-semibold text-gray-800 mb-1">{t.artistsLabel}:</h4>
+                        <p className="text-gray-600 text-sm">
+                          {artists}
+                        </p>
+                      </div>
+                    )}
 
-              <div className="pt-2 border-t">
-                <h4 className="font-semibold text-gray-800 mb-1">Nguồn tư liệu kiểm chứng:</h4>
-                <p className="text-xs text-gray-600 italic bg-amber-50/60 p-2.5 rounded border border-amber-200">
-                  {inspectRecord.nguon_tu_lieu || 'Bản ghi hiện chưa bổ sung nguồn tư liệu chính thức.'}
-                </p>
-              </div>
-            </div>
+                    <div className="pt-2 border-t">
+                      <h4 className="font-semibold text-gray-800 mb-1">{t.sourceLabel}:</h4>
+                      <p className="text-xs text-gray-600 italic bg-amber-50/60 p-2.5 rounded border border-amber-200">
+                        {source}
+                      </p>
+                    </div>
+                  </div>
 
-            <div className="flex items-center justify-between pt-4 border-t gap-2">
-              <button
-                type="button"
-                onClick={() => handleCopyCitation(inspectRecord)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-100 text-amber-900 font-semibold text-xs hover:bg-amber-200 transition-colors"
-              >
-                <Copy className="w-4 h-4" />
-                <span>Sao chép trích dẫn nguồn</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setInspectRecord(null)}
-                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-xs"
-              >
-                Đóng
-              </button>
-            </div>
+                  <div className="flex items-center justify-between pt-4 border-t gap-2">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSpeakCard(inspectRecord)}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors"
+                      >
+                        <Volume2 className="w-4 h-4" />
+                        <span>{t.btnListen}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleCopyCitation(inspectRecord)}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-100 text-amber-900 font-semibold text-xs hover:bg-amber-200 transition-colors"
+                      >
+                        <Copy className="w-4 h-4" />
+                        <span>{t.btnCopyCitation}</span>
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setInspectRecord(null)}
+                      className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-xs"
+                    >
+                      {t.close}
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
 
-      {/* Add New Record Modal (Allows user to input real data later) */}
+      {/* Add New Record Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <div className="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl border-2 border-amber-400 space-y-4">
@@ -588,7 +678,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
               <div className="flex items-center gap-2 text-[#741515]">
                 <FileJson className="w-5 h-5" />
                 <h3 className="font-bold text-lg font-serif-culture">
-                  Thêm Bản Ghi Mới Vào disan.json
+                  {t.btnNewRecord}
                 </h3>
               </div>
               <button
@@ -683,7 +773,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ records, onNavigateTab, onAddR
 
               <div>
                 <label className="block font-semibold text-gray-700 mb-1">
-                  Nguồn tư liệu kiểm chứng <span className="text-gray-400 font-normal">(Nếu để trống sẽ hiển thị nhãn cảnh báo cam)</span>
+                  Nguồn tư liệu kiểm chứng
                 </label>
                 <input
                   type="text"
