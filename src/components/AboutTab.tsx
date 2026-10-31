@@ -105,7 +105,7 @@ export const AboutTab: React.FC = () => {
       </section>
 
       {/* Limitations / What is not yet accomplished */}
-      <section className="bg-amber-50/70 border-2 border-amber-300 rounded-2xl p-6 sm:p-8 space-y-4">
+      <section className="hidden bg-amber-50/70 border-2 border-amber-300 rounded-2xl p-6 sm:p-8 space-y-4">
         <div className="flex items-center gap-3 border-b border-amber-300 pb-3 text-amber-950">
           <AlertCircle className="w-5 h-5 text-amber-700" />
           <h3 className="text-lg font-bold font-serif-culture">
