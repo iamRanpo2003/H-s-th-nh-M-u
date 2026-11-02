@@ -34,10 +34,50 @@ function writeDisanData(data: any[]) {
   fs.writeFileSync(DISAN_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+import { 
+  exportToJson, 
+  exportToCsv, 
+  exportToMarkdown, 
+  exportToBibTeX 
+} from './src/utils/exportUtils.ts';
+
 // API Routes
 app.get('/api/disan', (_req: Request, res: Response) => {
   const records = readDisanData();
   res.json({ success: true, data: records });
+});
+
+// Direct file export route for open data reuse
+app.get('/api/disan/export', (req: Request, res: Response) => {
+  const format = (req.query.format as string || 'json').toLowerCase();
+  const records = readDisanData();
+
+  if (format === 'csv') {
+    const csvContent = exportToCsv(records);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="disan-tho-mau.csv"');
+    return res.send(csvContent);
+  }
+
+  if (format === 'markdown' || format === 'md') {
+    const mdContent = exportToMarkdown(records);
+    res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="ho-so-di-san-tho-mau.md"');
+    return res.send(mdContent);
+  }
+
+  if (format === 'bibtex' || format === 'bib') {
+    const bibContent = exportToBibTeX(records);
+    res.setHeader('Content-Type', 'application/x-bibtex; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="trich-dan-tho-mau.bib"');
+    return res.send(bibContent);
+  }
+
+  // Default JSON export
+  const jsonContent = exportToJson(records);
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="disan-tho-mau.json"');
+  return res.send(jsonContent);
 });
 
 app.post('/api/disan', (req: Request, res: Response) => {

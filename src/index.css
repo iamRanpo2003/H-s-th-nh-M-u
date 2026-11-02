@@ -12,6 +12,31 @@
   }
 }
 
+/* Accessibility: High-contrast mode styles for visually impaired visitors */
+html.a11y-high-contrast body {
+  background-color: #0c0807 !important;
+  color: #fef08a !important;
+}
+
+html.a11y-high-contrast article,
+html.a11y-high-contrast section,
+html.a11y-high-contrast .bg-white {
+  background-color: #17110e !important;
+  color: #fef08a !important;
+  border-color: #ca8a04 !important;
+}
+
+html.a11y-high-contrast p,
+html.a11y-high-contrast span:not(.no-contrast),
+html.a11y-high-contrast div {
+  color: #fef9c3;
+}
+
+html.a11y-high-contrast a,
+html.a11y-high-contrast button {
+  outline-color: #facc15;
+}
+
 /* Custom delicate scrollbars */
 ::-webkit-scrollbar {
   width: 6px;

@@ -188,6 +188,9 @@ export const AboutTab: React.FC = () => {
               • Toàn bộ dữ liệu, hình ảnh đồ họa và văn bản trích dẫn trong ứng dụng được phép sử dụng cho mục đích: <strong>Học tập, nghiên cứu khoa học, giảng dạy và tuyên truyền bảo tồn di sản văn hóa phi lợi nhuận</strong> theo tinh thần Giấy phép Bản quyền Mở <em>Creative Commons CC BY-NC-ND 4.0</em> (Ghi công - Phi thương mại - Không phái sinh).
             </p>
             <p className="leading-relaxed text-gray-700 text-xs">
+              • <strong>Chính sách dữ liệu mở (Open Data):</strong> Ứng dụng hỗ trợ xuất toàn bộ dữ liệu ra tệp mở (<strong>JSON, CSV có mã UTF-8 BOM chuẩn Excel, Markdown báo cáo và BibTeX trích dẫn Zotero</strong>) cũng như đường dẫn tải trực tiếp qua API (<code>/api/disan/export</code>), đảm bảo tri thức di sản được tự do lan tỏa, không bị đóng kín hay nhốt dữ liệu trong phạm vi ứng dụng.
+            </p>
+            <p className="leading-relaxed text-gray-700 text-xs">
               • <strong>Nghiêm cấm:</strong> Mọi hành vi sao chép, trích xuất dữ liệu để phục vụ quảng cáo thương mại, bán vé, in ấn kinh doanh hoặc sử dụng danh nghĩa dự án để hành nghề bói toán, buôn thần bán thánh, trục lợi tâm linh trái với Điều 5 Luật Tín ngưỡng, tôn giáo 2016.
             </p>
           </div>

@@ -33,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLanguageChange,
   onReadCurrentPage
 }) => {
-  const { isSpeaking, stop } = useAudioReader();
+  const { isSpeaking, stop, setIsAccessibilityCenterOpen } = useAudioReader();
   const t = translations[currentLang];
 
   const navItems: { key: TabKey; label: string; icon: React.ReactNode; badge?: string }[] = [
@@ -154,29 +154,40 @@ export const Header: React.FC<HeaderProps> = ({
             })}
           </nav>
 
-          {/* Quick Voice Reader Action Button */}
-          <button
-            type="button"
-            onClick={isSpeaking ? stop : onReadCurrentPage}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
-              isSpeaking
-                ? 'bg-emerald-400 text-emerald-950 animate-pulse'
-                : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/50'
-            }`}
-            title="Đọc nội dung trang thành tiếng (Dành cho người cao tuổi & khiếm thị)"
-          >
-            {isSpeaking ? (
-              <>
-                <VolumeX className="w-3.5 h-3.5" />
-                <span>{t.header.audioReading}</span>
-              </>
-            ) : (
-              <>
-                <Volume2 className="w-3.5 h-3.5 text-amber-300" />
-                <span>{t.header.audioReaderBtn}</span>
-              </>
-            )}
-          </button>
+          {/* Accessibility Voice Mode Button for Elderly & Visually Impaired */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setIsAccessibilityCenterOpen(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-400 hover:bg-amber-300 text-red-950 shadow-sm transition-transform active:scale-95"
+              title="Mở Bảng Chế độ đọc cho Người cao tuổi & Khiếm thị (Phím tắt Alt + V)"
+            >
+              <Volume2 className="w-4 h-4 fill-current text-red-900" />
+              <span className="hidden sm:inline">Chế độ Đọc (Người cao tuổi)</span>
+              <span className="sm:hidden">Đọc tiếng</span>
+            </button>
+
+            {/* Quick Play/Stop Button */}
+            <button
+              type="button"
+              onClick={isSpeaking ? stop : onReadCurrentPage}
+              className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                isSpeaking
+                  ? 'bg-emerald-400 text-emerald-950 animate-pulse'
+                  : 'bg-black/30 hover:bg-black/50 text-amber-200 border border-amber-400/50'
+              }`}
+              title="Đọc nhanh trang hiện tại / Dừng đọc"
+            >
+              {isSpeaking ? (
+                <>
+                  <VolumeX className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">{t.header.audioReading}</span>
+                </>
+              ) : (
+                <span>Đọc trang</span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </header>

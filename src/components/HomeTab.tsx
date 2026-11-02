@@ -28,8 +28,10 @@ import {
   Layers,
   BookOpen,
   Volume2,
-  VolumeX
+  VolumeX,
+  Download
 } from 'lucide-react';
+import { ExportDataModal } from './ExportDataModal';
 
 interface HomeTabProps {
   records: DiSanItem[];
@@ -44,7 +46,15 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   onNavigateTab, 
   onAddRecord 
 }) => {
-  const { speak, isSpeaking, stop, currentTitle } = useAudioReader();
+  const { 
+    speak, 
+    isSpeaking, 
+    stop, 
+    currentTitle, 
+    speakRecord, 
+    activeReadingRecordId, 
+    setIsAccessibilityCenterOpen 
+  } = useAudioReader();
   const t = translations[currentLang].home;
 
   const [selectedLocation, setSelectedLocation] = useState<string>('ALL');
@@ -53,6 +63,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [inspectRecord, setInspectRecord] = useState<DiSanItem | null>(null);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [showExportModal, setShowExportModal] = useState<boolean>(false);
+  const [exportTargetRecord, setExportTargetRecord] = useState<DiSanItem | null>(null);
 
   // New record form state
   const [newForm, setNewForm] = useState<Omit<DiSanItem, 'id'>>({
@@ -91,19 +103,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   const handleSpeakCard = (item: DiSanItem) => {
     const en = recordTranslationsEn[item.id];
     const isEn = currentLang === 'en' && en;
-
     const title = isEn ? en.ten_chinh_thuc : item.ten_chinh_thuc;
-    const location = isEn ? en.dia_phuong : item.dia_phuong;
-    const status = isEn ? en.tinh_trang_ghi_danh : item.tinh_trang_ghi_danh;
-    const desc = isEn ? en.mo_ta_dac_trung : item.mo_ta_dac_trung;
-    const source = isEn ? en.nguon_tu_lieu : item.nguon_tu_lieu;
 
-    const fullSpeechText = `${title}. ${isEn ? 'Location:' : 'Địa phương:'} ${location}. ${isEn ? 'Status:' : 'Tình trạng ghi danh:'} ${status}. ${desc}. ${isEn ? 'Source citation:' : 'Nguồn tư liệu:'} ${source || (isEn ? 'Missing citation' : 'Chưa có nguồn kiểm chứng')}.`;
-
-    if (isSpeaking && currentTitle === title) {
+    if (isSpeaking && (currentTitle === title || activeReadingRecordId === item.id)) {
       stop();
     } else {
-      speak(fullSpeechText, title, currentLang);
+      speakRecord(item, currentLang);
     }
   };
 
@@ -285,10 +290,33 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsAccessibilityCenterOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+              title="Mở Bảng Chế độ đọc to cho Người cao tuổi & Khiếm thị (Tiếng Việt)"
+            >
+              <Volume2 className="w-4 h-4 text-emerald-300" />
+              <span>{currentLang === 'en' ? 'Audio Reader (Elderly)' : 'Đọc To (Người Cao Tuổi)'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setExportTargetRecord(null);
+                setShowExportModal(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-[#741515] border border-amber-400 text-xs font-bold shadow-xs transition-all cursor-pointer"
+              title={currentLang === 'en' ? 'Export open dataset to files (JSON, CSV, Markdown, BibTeX)' : 'Xuất dữ liệu mở ra tệp (JSON, CSV, Markdown, BibTeX)'}
+            >
+              <Download className="w-4 h-4 text-[#741515]" />
+              <span>{currentLang === 'en' ? 'Export Data' : 'Xuất Dữ Liệu'}</span>
+            </button>
+
             <button
               onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#881c1c] text-white hover:bg-[#6b1414] text-xs font-semibold shadow-sm transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#881c1c] text-white hover:bg-[#6b1414] text-xs font-semibold shadow-sm transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>{t.btnNewRecord}</span>
@@ -417,14 +445,14 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
               const missing = isMissingSource(item);
               const isCopied = copiedId === item.id;
-              const isReadingThis = isSpeaking && currentTitle === title;
+              const isReadingThis = isSpeaking && (currentTitle === title || activeReadingRecordId === item.id);
 
               return (
                 <article
                   key={item.id}
                   className={`bg-white rounded-xl border transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-sm hover:shadow-md ${
                     isReadingThis
-                      ? 'border-emerald-500 ring-2 ring-emerald-300 bg-emerald-50/20'
+                      ? 'border-emerald-600 ring-4 ring-emerald-400 bg-emerald-50/40 shadow-lg scale-[1.01]'
                       : missing 
                       ? 'border-amber-400 ring-1 ring-amber-300' 
                       : 'border-amber-200/80 hover:border-amber-400'
@@ -521,10 +549,24 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                     <button
                       type="button"
                       onClick={() => setInspectRecord(item)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:text-red-800 hover:bg-gray-200/70 rounded transition-colors"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:text-red-800 hover:bg-gray-200/70 rounded transition-colors"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>{t.btnDetails}</span>
+                    </button>
+
+                    {/* Individual Export Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExportTargetRecord(item);
+                        setShowExportModal(true);
+                      }}
+                      title={currentLang === 'en' ? 'Export this record' : 'Xuất bản ghi này ra tệp'}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:text-amber-950 hover:bg-amber-100/70 rounded transition-colors"
+                    >
+                      <Download className="w-3.5 h-3.5 text-amber-800" />
+                      <span>{currentLang === 'en' ? 'Export' : 'Xuất'}</span>
                     </button>
 
                     {/* Copy Citation Button */}
@@ -652,6 +694,18 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                       >
                         <Copy className="w-4 h-4" />
                         <span>{t.btnCopyCitation}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setExportTargetRecord(inspectRecord);
+                          setShowExportModal(true);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-100 text-[#741515] font-semibold text-xs hover:bg-red-200 transition-colors cursor-pointer"
+                      >
+                        <Download className="w-4 h-4 text-[#741515]" />
+                        <span>{currentLang === 'en' ? 'Export' : 'Xuất tệp'}</span>
                       </button>
                     </div>
 
@@ -803,6 +857,19 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           </div>
         </div>
       )}
+
+      {/* Open Data Export Modal */}
+      <ExportDataModal
+        isOpen={showExportModal}
+        onClose={() => {
+          setShowExportModal(false);
+          setExportTargetRecord(null);
+        }}
+        allRecords={records}
+        filteredRecords={filteredRecords}
+        currentLang={currentLang}
+        targetSingleRecord={exportTargetRecord}
+      />
     </div>
   );
 };

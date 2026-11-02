@@ -9,6 +9,7 @@ import { AudioReaderProvider, useAudioReader } from './context/AudioReaderContex
 import { Header } from './components/Header';
 import { FooterSourceBlock } from './components/FooterSourceBlock';
 import { AudioPlayerBar } from './components/AudioPlayerBar';
+import { AccessibilityModal } from './components/AccessibilityModal';
 import { HomeTab } from './components/HomeTab';
 import { RitualsTab } from './components/RitualsTab';
 import { DistinctionTab } from './components/DistinctionTab';
@@ -179,6 +180,17 @@ function AppContent() {
 
       {/* Persistent Audio Player Bar for Elderly & Visually Impaired Visitors */}
       <AudioPlayerBar onReadCurrentPage={handleReadCurrentPage} />
+
+      {/* Dedicated Accessibility Modal for Elderly & Visually Impaired Visitors */}
+      <AccessibilityModal
+        records={records}
+        activeTab={activeTab}
+        onNavigateTab={(tab) => {
+          setActiveTab(tab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        onReadCurrentPage={handleReadCurrentPage}
+      />
 
       {/* MANDATORY PERSISTENT SOURCE BLOCK - ALWAYS AT BOTTOM, NEVER HIDDEN */}
       <FooterSourceBlock />
