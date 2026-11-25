@@ -1,35 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { DiSanItem, TabKey, Language } from '../types/heritage';
 import { translations, recordTranslationsEn } from '../i18n/translations';
 import { useAudioReader } from '../context/AudioReaderContext';
-import { 
-  isMissingSource, 
-  formatCitation, 
-  filterHeritage, 
-  extractUniqueLocations, 
-  extractUniqueStatuses 
+import {
+  isMissingSource,
+  formatCitation,
+  filterHeritage,
+  extractUniqueLocations,
+  extractUniqueStatuses,
 } from '../utils/heritageUtils';
-import { 
-  Search, 
-  Filter, 
-  Copy, 
-  Check, 
-  AlertTriangle, 
-  MapPin, 
-  Award, 
-  Plus, 
-  Sparkles, 
-  ShieldAlert, 
-  Scale, 
-  Bot, 
-  Eye, 
+import {
+  Search,
+  Filter,
+  Copy,
+  Check,
+  AlertTriangle,
+  MapPin,
+  Award,
+  Plus,
+  Eye,
   X,
   FileJson,
   Layers,
   BookOpen,
   Volume2,
   VolumeX,
-  Download
+  Download,
+  ArrowDown,
 } from 'lucide-react';
 import { ExportDataModal } from './ExportDataModal';
 
@@ -40,22 +37,23 @@ interface HomeTabProps {
   onAddRecord: (record: DiSanItem) => void;
 }
 
-export const HomeTab: React.FC<HomeTabProps> = ({ 
-  records, 
-  currentLang, 
-  onNavigateTab, 
-  onAddRecord 
+export const HomeTab: React.FC<HomeTabProps> = ({
+  records,
+  currentLang,
+  onAddRecord,
 }) => {
-  const { 
-    speak, 
-    isSpeaking, 
-    stop, 
-    currentTitle, 
-    speakRecord, 
-    activeReadingRecordId, 
-    setIsAccessibilityCenterOpen 
+  const {
+    isSpeaking,
+    stop,
+    currentTitle,
+    speakRecord,
+    activeReadingRecordId,
+    setIsAccessibilityCenterOpen,
   } = useAudioReader();
   const t = translations[currentLang].home;
+
+  const repoSectionRef = useRef<HTMLElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedLocation, setSelectedLocation] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
@@ -63,10 +61,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [inspectRecord, setInspectRecord] = useState<DiSanItem | null>(null);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
   const [exportTargetRecord, setExportTargetRecord] = useState<DiSanItem | null>(null);
 
-  // New record form state
   const [newForm, setNewForm] = useState<Omit<DiSanItem, 'id'>>({
     ten_chinh_thuc: '',
     ten_goi_khac: '',
@@ -78,11 +76,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({
     nguon_tu_lieu: '',
   });
 
-  // Extract unique locations and statuses
   const locations = useMemo(() => extractUniqueLocations(records), [records]);
   const statuses = useMemo(() => extractUniqueStatuses(records), [records]);
 
-  // Filtered list
   const filteredRecords = useMemo(() => {
     return filterHeritage(records, {
       diaPhuong: selectedLocation,
@@ -90,6 +86,13 @@ export const HomeTab: React.FC<HomeTabProps> = ({
       search: searchQuery,
     });
   }, [records, selectedLocation, selectedStatus, searchQuery]);
+
+  const handleStartNow = () => {
+    repoSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 350);
+  };
 
   const handleCopyCitation = (item: DiSanItem) => {
     const text = formatCitation(item);
@@ -115,9 +118,14 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newForm.ten_chinh_thuc.trim()) {
-      alert(currentLang === 'en' ? 'Please provide the official heritage name!' : 'Vui lòng nhập tên chính thức của di sản!');
+      setFormError(
+        currentLang === 'en'
+          ? 'Please enter the official heritage name before saving.'
+          : 'Vui lòng nhập tên chính thức của di sản trước khi lưu.'
+      );
       return;
     }
+    setFormError(null);
     const item: DiSanItem = {
       id: `ds-${Date.now()}`,
       ...newForm,
@@ -137,155 +145,94 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   };
 
   return (
-    <div className="space-y-12">
-      {/* Hero Section */}
+    <div className="space-y-10">
+      {/* First-Time Visitor Hero: Clear Title + Target Audience Sentence + Single Immediate CTA */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#741515] via-[#8c1c1c] to-[#470a0a] text-white p-6 sm:p-10 shadow-xl border-2 border-amber-500/40">
         <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
 
-        <div className="relative z-10 max-w-4xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/30 text-xs font-semibold tracking-wide uppercase">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            {t.badge}
-          </div>
-
+        <div className="relative z-10 max-w-3xl space-y-5">
           <h1 className="text-2xl sm:text-4xl font-extrabold font-serif-culture tracking-wide text-amber-100 leading-tight">
             {t.heroTitle}
           </h1>
 
-          <p className="text-amber-100/90 text-sm sm:text-base leading-relaxed">
+          <p className="text-amber-100/95 text-base sm:text-lg leading-relaxed">
             {t.heroDesc}
           </p>
 
-          {/* Quick Nav Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-4">
+          <div>
             <button
-              onClick={() => onNavigateTab('rituals')}
-              className="flex flex-col p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-amber-300/30 text-left transition-all group"
+              type="button"
+              onClick={handleStartNow}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[48px] rounded-xl bg-amber-400 hover:bg-amber-300 text-red-950 font-extrabold text-base shadow-lg transition-transform active:scale-95 cursor-pointer"
             >
-              <div className="flex items-center justify-between text-amber-300 mb-1">
-                <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-medium opacity-80">Xem</span>
-              </div>
-              <span className="text-sm font-bold text-white">{t.btnRituals}</span>
-              <span className="text-[11px] text-amber-200/80">{t.btnRitualsSub}</span>
-            </button>
-
-            <button
-              onClick={() => onNavigateTab('distinction')}
-              className="flex flex-col p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-amber-300/30 text-left transition-all group"
-            >
-              <div className="flex items-center justify-between text-rose-300 mb-1">
-                <ShieldAlert className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-medium opacity-80">Phân biệt</span>
-              </div>
-              <span className="text-sm font-bold text-white">{t.btnDistinction}</span>
-              <span className="text-[11px] text-amber-200/80">{t.btnDistinctionSub}</span>
-            </button>
-
-            <button
-              onClick={() => onNavigateTab('legal')}
-              className="flex flex-col p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-amber-300/30 text-left transition-all group"
-            >
-              <div className="flex items-center justify-between text-amber-300 mb-1">
-                <Scale className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-medium opacity-80">Tra cứu</span>
-              </div>
-              <span className="text-sm font-bold text-white">{t.btnLegal}</span>
-              <span className="text-[11px] text-amber-200/80">{t.btnLegalSub}</span>
-            </button>
-
-            <button
-              onClick={() => onNavigateTab('sources')}
-              className="flex flex-col p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-amber-300/30 text-left transition-all group"
-            >
-              <div className="flex items-center justify-between text-emerald-300 mb-1">
-                <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-medium opacity-80">Kiểm chứng</span>
-              </div>
-              <span className="text-sm font-bold text-white">{t.btnSources}</span>
-              <span className="text-[11px] text-amber-200/80">{t.btnSourcesSub}</span>
-            </button>
-
-            <button
-              onClick={() => onNavigateTab('advisor')}
-              className="flex flex-col p-3 rounded-xl bg-amber-400 text-red-950 hover:bg-amber-300 border border-amber-300 text-left transition-all group shadow-md"
-            >
-              <div className="flex items-center justify-between text-red-950 mb-1">
-                <Bot className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold">AI</span>
-              </div>
-              <span className="text-sm font-extrabold">{t.btnAdvisor}</span>
-              <span className="text-[11px] text-red-900 font-medium">{t.btnAdvisorSub}</span>
+              <span>{t.heroCta}</span>
+              <ArrowDown className="w-5 h-5" />
             </button>
           </div>
         </div>
       </section>
 
       {/* Overview of Tam Tòa Thánh Mẫu & Tứ Phủ */}
-      <section className="bg-amber-50/70 border border-amber-200 rounded-2xl p-6 sm:p-8">
+      <section className="bg-amber-50/70 border border-amber-200 rounded-2xl p-5 sm:p-8">
         <div className="text-center max-w-3xl mx-auto mb-8">
           <h2 className="text-xl sm:text-2xl font-bold font-serif-culture text-[#741515]">
             {t.tamToaTitle}
           </h2>
-          <p className="text-sm text-gray-700 mt-2">
+          <p className="text-base text-gray-700 mt-2 leading-relaxed">
             {t.tamToaDesc}
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Mau De Nhat */}
           <div className="bg-white rounded-xl p-5 border-t-4 border-red-600 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-3 h-3 rounded-full bg-red-600"></span>
+              <span className="w-3 h-3 rounded-full bg-red-600 shrink-0"></span>
               <span className="text-xs font-bold text-red-700 tracking-wider uppercase">{t.realmHeaven}</span>
             </div>
-            <h3 className="font-bold text-gray-900 text-base mb-1">{t.realmHeavenTitle}</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">{t.realmHeavenDesc}</p>
+            <h3 className="font-bold text-gray-900 text-lg mb-1.5">{t.realmHeavenTitle}</h3>
+            <p className="text-base text-gray-700 leading-relaxed">{t.realmHeavenDesc}</p>
           </div>
 
-          {/* Mau De Nhi */}
           <div className="bg-white rounded-xl p-5 border-t-4 border-emerald-600 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-3 h-3 rounded-full bg-emerald-600"></span>
+              <span className="w-3 h-3 rounded-full bg-emerald-600 shrink-0"></span>
               <span className="text-xs font-bold text-emerald-700 tracking-wider uppercase">{t.realmForest}</span>
             </div>
-            <h3 className="font-bold text-gray-900 text-base mb-1">{t.realmForestTitle}</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">{t.realmForestDesc}</p>
+            <h3 className="font-bold text-gray-900 text-lg mb-1.5">{t.realmForestTitle}</h3>
+            <p className="text-base text-gray-700 leading-relaxed">{t.realmForestDesc}</p>
           </div>
 
-          {/* Mau De Tam */}
           <div className="bg-white rounded-xl p-5 border-t-4 border-sky-600 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-3 h-3 rounded-full bg-sky-500"></span>
+              <span className="w-3 h-3 rounded-full bg-sky-500 shrink-0"></span>
               <span className="text-xs font-bold text-sky-700 tracking-wider uppercase">{t.realmWater}</span>
             </div>
-            <h3 className="font-bold text-gray-900 text-base mb-1">{t.realmWaterTitle}</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">{t.realmWaterDesc}</p>
+            <h3 className="font-bold text-gray-900 text-lg mb-1.5">{t.realmWaterTitle}</h3>
+            <p className="text-base text-gray-700 leading-relaxed">{t.realmWaterDesc}</p>
           </div>
 
-          {/* Mau De Tu / Dia Tien */}
           <div className="bg-white rounded-xl p-5 border-t-4 border-amber-500 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-3 h-3 rounded-full bg-amber-500"></span>
+              <span className="w-3 h-3 rounded-full bg-amber-500 shrink-0"></span>
               <span className="text-xs font-bold text-amber-700 tracking-wider uppercase">{t.realmEarth}</span>
             </div>
-            <h3 className="font-bold text-gray-900 text-base mb-1">{t.realmEarthTitle}</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">{t.realmEarthDesc}</p>
+            <h3 className="font-bold text-gray-900 text-lg mb-1.5">{t.realmEarthTitle}</h3>
+            <p className="text-base text-gray-700 leading-relaxed">{t.realmEarthDesc}</p>
           </div>
         </div>
       </section>
 
       {/* Main Heritage Repository Section */}
-      <section className="space-y-6">
+      <section id="kho-du-lieu-di-san" ref={repoSectionRef} className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 border-amber-200">
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <BookOpen className="w-6 h-6 text-[#881c1c]" />
+              <BookOpen className="w-6 h-6 text-[#881c1c] shrink-0" />
               <h2 className="text-xl sm:text-2xl font-bold font-serif-culture text-[#741515]">
                 {t.repoTitle}
               </h2>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">
+            <p className="text-base text-gray-700 mt-1 leading-relaxed">
               {t.repoDesc}
             </p>
           </div>
@@ -294,11 +241,11 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             <button
               type="button"
               onClick={() => setIsAccessibilityCenterOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-sm font-bold shadow-xs transition-all cursor-pointer"
               title="Mở Bảng Chế độ đọc to cho Người cao tuổi & Khiếm thị (Tiếng Việt)"
             >
-              <Volume2 className="w-4 h-4 text-emerald-300" />
-              <span>{currentLang === 'en' ? 'Audio Reader (Elderly)' : 'Đọc To (Người Cao Tuổi)'}</span>
+              <Volume2 className="w-4 h-4 text-emerald-300 shrink-0" />
+              <span>{currentLang === 'en' ? 'Audio Reader' : 'Đọc To (Cao Tuổi)'}</span>
             </button>
 
             <button
@@ -307,18 +254,22 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 setExportTargetRecord(null);
                 setShowExportModal(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-[#741515] border border-amber-400 text-xs font-bold shadow-xs transition-all cursor-pointer"
-              title={currentLang === 'en' ? 'Export open dataset to files (JSON, CSV, Markdown, BibTeX)' : 'Xuất dữ liệu mở ra tệp (JSON, CSV, Markdown, BibTeX)'}
+              className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-[#741515] border border-amber-400 text-sm font-bold shadow-xs transition-all cursor-pointer"
+              title={currentLang === 'en' ? 'Export open dataset to files' : 'Xuất dữ liệu mở ra tệp'}
             >
-              <Download className="w-4 h-4 text-[#741515]" />
+              <Download className="w-4 h-4 text-[#741515] shrink-0" />
               <span>{currentLang === 'en' ? 'Export Data' : 'Xuất Dữ Liệu'}</span>
             </button>
 
             <button
-              onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#881c1c] text-white hover:bg-[#6b1414] text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+              type="button"
+              onClick={() => {
+                setFormError(null);
+                setShowAddModal(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-xl bg-[#881c1c] text-white hover:bg-[#6b1414] text-sm font-semibold shadow-sm transition-colors cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 shrink-0" />
               <span>{t.btnNewRecord}</span>
             </button>
           </div>
@@ -327,62 +278,62 @@ export const HomeTab: React.FC<HomeTabProps> = ({
         {/* Filter Controls Bar */}
         <div className="bg-white p-4 sm:p-5 rounded-xl border border-amber-200 shadow-sm space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-            {/* Search Input */}
-            <div className="sm:col-span-5 relative">
+            <div className="sm:col-span-5 relative min-w-0">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t.searchPlaceholder}
-                className="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white"
+                className="w-full min-h-[44px] pl-9 pr-10 py-2 text-base bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white"
               />
               {searchQuery && (
                 <button
+                  type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label="Xóa từ khóa tìm kiếm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 hover:text-gray-700"
                 >
                   <X className="w-4 h-4" />
                 </button>
               )}
             </div>
 
-            {/* Filter by Location */}
-            <div className="sm:col-span-3">
+            <div className="sm:col-span-3 min-w-0">
               <label htmlFor="filter-dia-phuong" className="sr-only">Lọc theo địa phương</label>
-              <div className="relative">
+              <div className="relative min-w-0">
                 <MapPin className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <select
                   id="filter-dia-phuong"
                   value={selectedLocation}
                   onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white"
+                  className="w-full min-w-0 min-h-[44px] pl-9 pr-3 py-2 text-base bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white"
                 >
                   <option value="ALL">{t.allLocations}</option>
                   {locations.map((loc, idx) => (
                     <option key={idx} value={loc}>
-                      {loc.length > 30 ? loc.slice(0, 30) + '...' : loc}
+                      {loc.length > 32 ? loc.slice(0, 32) + '...' : loc}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* Filter by Recognition Status */}
-            <div className="sm:col-span-4">
+            <div className="sm:col-span-4 min-w-0">
               <label htmlFor="filter-tinh-trang" className="sr-only">Lọc theo tình trạng ghi danh</label>
-              <div className="relative">
+              <div className="relative min-w-0">
                 <Award className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <select
                   id="filter-tinh-trang"
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white"
+                  className="w-full min-w-0 min-h-[44px] pl-9 pr-3 py-2 text-base bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white"
                 >
                   <option value="ALL">{t.allStatuses}</option>
                   {statuses.map((st, idx) => (
                     <option key={idx} value={st}>
-                      {st.length > 35 ? st.slice(0, 35) + '...' : st}
+                      {st.length > 36 ? st.slice(0, 36) + '...' : st}
                     </option>
                   ))}
                 </select>
@@ -390,30 +341,32 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </div>
           </div>
 
-          {/* Active Filter Indicators */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
-            <div className="flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-amber-700" />
-              <span>{t.showing}: <strong>{filteredRecords.length}</strong> / {records.length} {t.records}</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100 text-base text-gray-600">
+            <div className="flex flex-wrap items-center gap-2">
+              <Filter className="w-4 h-4 text-amber-700 shrink-0" />
+              <span>
+                {t.showing}: <strong>{filteredRecords.length}</strong> / {records.length} {t.records}
+              </span>
               {(selectedLocation !== 'ALL' || selectedStatus !== 'ALL' || searchQuery) && (
                 <button
+                  type="button"
                   onClick={() => {
                     setSelectedLocation('ALL');
                     setSelectedStatus('ALL');
                     setSearchQuery('');
                   }}
-                  className="ml-2 text-red-700 hover:underline font-medium"
+                  className="px-2 min-h-[44px] text-red-700 hover:underline font-medium"
                 >
                   {t.clearFilter}
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-1 text-emerald-800">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span> {t.verifiedSource}
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <span className="inline-flex items-center gap-1.5 text-emerald-800">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> {t.verifiedSource}
               </span>
-              <span className="inline-flex items-center gap-1 text-amber-800">
-                <span className="w-2 h-2 rounded-full bg-amber-500"></span> {t.missingSource}
+              <span className="inline-flex items-center gap-1.5 text-amber-800">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> {t.missingSource}
               </span>
             </div>
           </div>
@@ -421,10 +374,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
         {/* Heritage Cards Grid */}
         {filteredRecords.length === 0 ? (
-          <div className="bg-white rounded-xl p-12 text-center border border-dashed border-gray-300">
+          <div className="bg-white rounded-xl p-8 sm:p-12 text-center border border-dashed border-gray-300">
             <Layers className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-800 text-base">{t.noResults}</h3>
-            <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
+            <h3 className="font-semibold text-gray-800 text-lg">{t.noResults}</h3>
+            <p className="text-base text-gray-600 mt-1 max-w-md mx-auto">
               {t.noResultsDesc}
             </p>
           </div>
@@ -450,41 +403,40 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               return (
                 <article
                   key={item.id}
-                  className={`bg-white rounded-xl border transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-sm hover:shadow-md ${
+                  className={`bg-white rounded-xl border transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-sm hover:shadow-md min-w-0 ${
                     isReadingThis
-                      ? 'border-emerald-600 ring-4 ring-emerald-400 bg-emerald-50/40 shadow-lg scale-[1.01]'
-                      : missing 
-                      ? 'border-amber-400 ring-1 ring-amber-300' 
+                      ? 'border-emerald-600 ring-4 ring-emerald-400 bg-emerald-50/40 shadow-lg'
+                      : missing
+                      ? 'border-amber-400 ring-1 ring-amber-300'
                       : 'border-amber-200/80 hover:border-amber-400'
                   }`}
                 >
                   <div className="p-5 space-y-3">
                     {/* Header badge area */}
                     <div className="flex items-start justify-between gap-2">
-                      <span className="inline-block px-2.5 py-1 rounded bg-amber-100 text-amber-900 text-[11px] font-semibold">
+                      <span className="inline-block px-2.5 py-1 rounded bg-amber-100 text-amber-900 text-xs font-semibold">
                         {category}
                       </span>
 
-                      <div className="flex items-center gap-1.5">
-                        {/* Audio Reader button on each card */}
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={() => handleSpeakCard(item)}
-                          className={`p-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-sm font-semibold transition-all ${
                             isReadingThis
                               ? 'bg-emerald-500 text-white animate-pulse'
-                              : 'bg-amber-100/70 hover:bg-amber-200 text-amber-900'
+                              : 'bg-amber-100/80 hover:bg-amber-200 text-amber-900'
                           }`}
                           title={isReadingThis ? t.btnStopListen : t.btnListen}
+                          aria-label={isReadingThis ? t.btnStopListen : t.btnListen}
                         >
-                          {isReadingThis ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                          {isReadingThis ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                         </button>
 
-                        {/* Orange warning badge if missing source */}
                         {missing && (
-                          <span 
+                          <span
                             aria-label={t.missingSourceBadge}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-500 text-amber-950 font-bold text-[11px] shadow-sm animate-pulse"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-500 text-amber-950 font-bold text-xs shadow-sm animate-pulse"
                           >
                             <AlertTriangle className="w-3.5 h-3.5 text-amber-950" />
                             <span>{t.missingSourceBadge}</span>
@@ -495,49 +447,49 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
                     {/* Official Title */}
                     <div>
-                      <h3 className="font-bold text-base font-serif-culture text-gray-900 leading-snug group-hover:text-red-800">
+                      <h3 className="font-bold text-lg font-serif-culture text-gray-900 leading-snug">
                         {title}
                       </h3>
                       {alias && (
-                        <p className="text-xs text-gray-500 mt-0.5 italic">
+                        <p className="text-base text-gray-600 mt-1 italic">
                           {t.aliasLabel}: {alias}
                         </p>
                       )}
                     </div>
 
                     {/* Location & Status Info */}
-                    <div className="space-y-1.5 text-xs text-gray-600 pt-1">
-                      <div className="flex items-start gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-red-700 flex-shrink-0 mt-0.5" />
-                        <span>{location}</span>
+                    <div className="space-y-1.5 text-base text-gray-700 pt-1">
+                      <div className="flex items-start gap-2">
+                        <MapPin className="w-4 h-4 text-red-700 flex-shrink-0 mt-1" />
+                        <span className="break-words min-w-0">{location}</span>
                       </div>
-                      <div className="flex items-start gap-1.5">
-                        <Award className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
-                        <span className="font-medium text-gray-800">{status}</span>
+                      <div className="flex items-start gap-2">
+                        <Award className="w-4 h-4 text-amber-600 flex-shrink-0 mt-1" />
+                        <span className="font-medium text-gray-800 break-words min-w-0">{status}</span>
                       </div>
                     </div>
 
                     {/* Description preview */}
-                    <p className="text-xs text-gray-700 line-clamp-3 leading-relaxed pt-1">
+                    <p className="text-base text-gray-700 line-clamp-3 leading-relaxed pt-1">
                       {desc}
                     </p>
 
                     {/* Artists */}
                     {artists && (
-                      <p className="text-[11px] text-gray-500">
-                        <strong className="text-gray-700">{t.artistsLabel}:</strong> {artists}
+                      <p className="text-base text-gray-600">
+                        <strong className="text-gray-800">{t.artistsLabel}:</strong> {artists}
                       </p>
                     )}
 
                     {/* Source section inside card */}
                     <div className="pt-2 border-t border-gray-100">
-                      <div className="text-[11px]">
-                        <span className="font-semibold text-gray-700">{t.sourceLabel}: </span>
+                      <div className="text-base">
+                        <span className="font-semibold text-gray-800">{t.sourceLabel}: </span>
                         {source ? (
-                          <span className="text-gray-600 italic">{source}</span>
+                          <span className="text-gray-700 italic break-words">{source}</span>
                         ) : (
-                          <span className="text-amber-700 font-semibold italic bg-amber-50 px-1 py-0.5 rounded">
-                            Chưa cập nhật nguồn tư liệu khoa học
+                          <span className="text-amber-800 font-semibold italic bg-amber-50 px-1.5 py-0.5 rounded">
+                            Chưa cập nhật nguồn tư liệu khoa học [CẦN BỔ SUNG]
                           </span>
                         )}
                       </div>
@@ -545,17 +497,16 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                   </div>
 
                   {/* Card Actions Footer */}
-                  <div className="p-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-2">
+                  <div className="p-3 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
                     <button
                       type="button"
                       onClick={() => setInspectRecord(item)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:text-red-800 hover:bg-gray-200/70 rounded transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 min-h-[44px] text-sm font-semibold text-gray-700 hover:text-red-800 hover:bg-gray-200/70 rounded-lg transition-colors"
                     >
-                      <Eye className="w-3.5 h-3.5" />
+                      <Eye className="w-4 h-4" />
                       <span>{t.btnDetails}</span>
                     </button>
 
-                    {/* Individual Export Button */}
                     <button
                       type="button"
                       onClick={() => {
@@ -563,18 +514,17 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                         setShowExportModal(true);
                       }}
                       title={currentLang === 'en' ? 'Export this record' : 'Xuất bản ghi này ra tệp'}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:text-amber-950 hover:bg-amber-100/70 rounded transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 min-h-[44px] text-sm font-semibold text-gray-700 hover:text-amber-950 hover:bg-amber-100/70 rounded-lg transition-colors"
                     >
-                      <Download className="w-3.5 h-3.5 text-amber-800" />
+                      <Download className="w-4 h-4 text-amber-800" />
                       <span>{currentLang === 'en' ? 'Export' : 'Xuất'}</span>
                     </button>
 
-                    {/* Copy Citation Button */}
                     <button
                       type="button"
                       onClick={() => handleCopyCitation(item)}
                       title={t.btnCopyCitation}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded transition-all ${
+                      className={`inline-flex items-center gap-1.5 px-3 min-h-[44px] text-sm font-semibold rounded-lg transition-all ${
                         isCopied
                           ? 'bg-emerald-600 text-white'
                           : 'bg-white hover:bg-amber-100/70 text-amber-900 border border-amber-300 shadow-xs'
@@ -582,12 +532,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                     >
                       {isCopied ? (
                         <>
-                          <Check className="w-3.5 h-3.5" />
+                          <Check className="w-4 h-4" />
                           <span>{t.btnCopied}</span>
                         </>
                       ) : (
                         <>
-                          <Copy className="w-3.5 h-3.5 text-amber-700" />
+                          <Copy className="w-4 h-4 text-amber-700" />
                           <span>{t.btnCopyCitation}</span>
                         </>
                       )}
@@ -602,8 +552,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
       {/* Inspect Modal */}
       {inspectRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl border-2 border-amber-300 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 shadow-2xl border-2 border-amber-300 space-y-4">
             {(() => {
               const en = recordTranslationsEn[inspectRecord.id];
               const isEn = currentLang === 'en' && en;
@@ -619,7 +569,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               return (
                 <>
                   <div className="flex items-start justify-between gap-4 border-b pb-3">
-                    <div>
+                    <div className="min-w-0">
                       <span className="px-2.5 py-1 rounded bg-amber-100 text-amber-900 text-xs font-bold">
                         {category}
                       </span>
@@ -627,61 +577,61 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                         {title}
                       </h3>
                       {alias && (
-                        <p className="text-xs text-gray-500 italic">
+                        <p className="text-base text-gray-600 italic mt-1">
                           {t.aliasLabel}: {alias}
                         </p>
                       )}
                     </div>
                     <button
+                      type="button"
                       onClick={() => setInspectRecord(null)}
-                      className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                      aria-label={t.close}
+                      className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 shrink-0"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
 
-                  <div className="space-y-3 text-sm text-gray-700">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-amber-50/50 rounded-lg">
+                  <div className="space-y-4 text-base text-gray-700">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-amber-50/50 rounded-lg">
                       <div>
-                        <span className="text-xs font-semibold text-gray-500 block">{t.locationLabel}:</span>
-                        <span className="font-medium text-gray-800">{location}</span>
+                        <span className="text-sm font-semibold text-gray-600 block">{t.locationLabel}:</span>
+                        <span className="font-medium text-gray-900">{location}</span>
                       </div>
                       <div>
-                        <span className="text-xs font-semibold text-gray-500 block">{t.statusLabel}:</span>
+                        <span className="text-sm font-semibold text-gray-600 block">{t.statusLabel}:</span>
                         <span className="font-medium text-amber-900">{status}</span>
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="font-semibold text-gray-800 mb-1">Mô tả đặc trưng thực hành:</h4>
-                      <p className="text-gray-600 leading-relaxed text-sm bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <h4 className="font-semibold text-gray-900 mb-1">Mô tả đặc trưng thực hành:</h4>
+                      <p className="text-gray-700 leading-relaxed text-base bg-gray-50 p-3.5 rounded-lg border border-gray-100">
                         {desc}
                       </p>
                     </div>
 
                     {artists && (
                       <div>
-                        <h4 className="font-semibold text-gray-800 mb-1">{t.artistsLabel}:</h4>
-                        <p className="text-gray-600 text-sm">
-                          {artists}
-                        </p>
+                        <h4 className="font-semibold text-gray-900 mb-1">{t.artistsLabel}:</h4>
+                        <p className="text-gray-700 text-base">{artists}</p>
                       </div>
                     )}
 
                     <div className="pt-2 border-t">
-                      <h4 className="font-semibold text-gray-800 mb-1">{t.sourceLabel}:</h4>
-                      <p className="text-xs text-gray-600 italic bg-amber-50/60 p-2.5 rounded border border-amber-200">
-                        {source}
+                      <h4 className="font-semibold text-gray-900 mb-1">{t.sourceLabel}:</h4>
+                      <p className="text-base text-gray-700 italic bg-amber-50/60 p-3 rounded border border-amber-200">
+                        {source || '[CẦN BỔ SUNG]'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t gap-2">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center justify-between pt-4 border-t gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
                         onClick={() => handleSpeakCard(inspectRecord)}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors"
+                        className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors"
                       >
                         <Volume2 className="w-4 h-4" />
                         <span>{t.btnListen}</span>
@@ -690,7 +640,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                       <button
                         type="button"
                         onClick={() => handleCopyCitation(inspectRecord)}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-100 text-amber-900 font-semibold text-xs hover:bg-amber-200 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-xl bg-amber-100 text-amber-900 font-semibold text-sm hover:bg-amber-200 transition-colors"
                       >
                         <Copy className="w-4 h-4" />
                         <span>{t.btnCopyCitation}</span>
@@ -702,7 +652,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                           setExportTargetRecord(inspectRecord);
                           setShowExportModal(true);
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-100 text-[#741515] font-semibold text-xs hover:bg-red-200 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-xl bg-red-100 text-[#741515] font-semibold text-sm hover:bg-red-200 transition-colors cursor-pointer"
                       >
                         <Download className="w-4 h-4 text-[#741515]" />
                         <span>{currentLang === 'en' ? 'Export' : 'Xuất tệp'}</span>
@@ -712,7 +662,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                     <button
                       type="button"
                       onClick={() => setInspectRecord(null)}
-                      className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-xs"
+                      className="px-4 min-h-[44px] rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-sm"
                     >
                       {t.close}
                     </button>
@@ -726,8 +676,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
       {/* Add New Record Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl border-2 border-amber-400 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 shadow-2xl border-2 border-amber-400 space-y-4">
             <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center gap-2 text-[#741515]">
                 <FileJson className="w-5 h-5" />
@@ -736,14 +686,22 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                aria-label={t.close}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateSubmit} className="space-y-3 text-xs sm:text-sm">
+            {formError && (
+              <div role="alert" className="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-900 text-base font-medium">
+                {formError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateSubmit} className="space-y-3 text-base">
               <div>
                 <label className="block font-semibold text-gray-700 mb-1">
                   Tên chính thức <span className="text-red-500">*</span>
@@ -754,7 +712,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                   placeholder="Ví dụ: Đền Chầu Đệ Nhị Thượng Ngàn"
                   value={newForm.ten_chinh_thuc}
                   onChange={(e) => setNewForm({ ...newForm, ten_chinh_thuc: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
+                  className="w-full min-h-[44px] px-3 py-2 text-base border rounded-lg focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
@@ -766,7 +724,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                     placeholder="Ví dụ: Đền Đông Cuông"
                     value={newForm.ten_goi_khac}
                     onChange={(e) => setNewForm({ ...newForm, ten_goi_khac: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
+                    className="w-full min-h-[44px] px-3 py-2 text-base border rounded-lg focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
                 <div>
@@ -775,7 +733,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                     type="text"
                     value={newForm.loai_hinh}
                     onChange={(e) => setNewForm({ ...newForm, loai_hinh: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
+                    className="w-full min-h-[44px] px-3 py-2 text-base border rounded-lg focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
               </div>
@@ -785,10 +743,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                   <label className="block font-semibold text-gray-700 mb-1">Địa phương</label>
                   <input
                     type="text"
-                    placeholder="Ví dụ: Tỉnh Yên Bái"
+                    placeholder="Ghi rõ tên mới sau sắp xếp 2025 hoặc tên cũ"
                     value={newForm.dia_phuong}
                     onChange={(e) => setNewForm({ ...newForm, dia_phuong: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
+                    className="w-full min-h-[44px] px-3 py-2 text-base border rounded-lg focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
                 <div>
@@ -798,7 +756,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                     placeholder="Ví dụ: Di tích Quốc gia / UNESCO"
                     value={newForm.tinh_trang_ghi_danh}
                     onChange={(e) => setNewForm({ ...newForm, tinh_trang_ghi_danh: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
+                    className="w-full min-h-[44px] px-3 py-2 text-base border rounded-lg focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
               </div>
@@ -810,7 +768,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                   placeholder="Mô tả phong tục, trang phục, nghi thức thực hành..."
                   value={newForm.mo_ta_dac_trung}
                   onChange={(e) => setNewForm({ ...newForm, mo_ta_dac_trung: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2 text-base border rounded-lg focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
@@ -821,7 +779,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                   placeholder="Họ và tên nghệ nhân, đồng đền, thủ nhang"
                   value={newForm.nghe_nhan_tieu_bieu}
                   onChange={(e) => setNewForm({ ...newForm, nghe_nhan_tieu_bieu: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
+                  className="w-full min-h-[44px] px-3 py-2 text-base border rounded-lg focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
@@ -831,10 +789,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="Ví dụ: Hồ sơ Bộ VHTTDL số...; Giáo sư Ngô Đức Thịnh..."
+                  placeholder="Ví dụ: Hồ sơ Bộ VHTTDL số...; GS. Ngô Đức Thịnh..."
                   value={newForm.nguon_tu_lieu}
                   onChange={(e) => setNewForm({ ...newForm, nguon_tu_lieu: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
+                  className="w-full min-h-[44px] px-3 py-2 text-base border rounded-lg focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
@@ -842,13 +800,13 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold"
+                  className="px-4 min-h-[44px] rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg bg-[#881c1c] hover:bg-[#6b1414] text-white font-semibold shadow-sm"
+                  className="px-5 min-h-[44px] rounded-xl bg-[#881c1c] hover:bg-[#6b1414] text-white font-semibold shadow-sm"
                 >
                   Lưu Hồ Sơ
                 </button>

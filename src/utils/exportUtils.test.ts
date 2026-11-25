@@ -29,6 +29,7 @@ const sampleRecords: DiSanItem[] = [
   {
     id: 'ds-02',
     ten_chinh_thuc: 'Hát Chầu Văn (Hát Văn)',
+    ten_goi_khac: 'Văn ca, Hát bóng',
     loai_hinh: 'Nghệ thuật trình diễn dân gian',
     dia_phuong: 'Nam Định, Hà Nam, Hà Nội',
     mo_ta_dac_trung: 'Âm nhạc phụng vụ tâm linh trong nghi thức hầu đồng với đàn nguyệt, trống bản.',

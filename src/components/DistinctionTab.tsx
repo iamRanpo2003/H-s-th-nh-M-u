@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  ShieldAlert, 
-  CheckCircle2, 
-  XCircle, 
-  AlertTriangle, 
-  HelpCircle, 
-  DollarSign, 
-  Eye, 
-  Flame, 
+import {
+  ShieldAlert,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  HelpCircle,
   Scale,
-  Sparkles
 } from 'lucide-react';
 
 export const DistinctionTab: React.FC = () => {
-  // Self assessment state
   const [answers, setAnswers] = useState<{ [key: string]: boolean | null }>({});
   const [assessmentResult, setAssessmentResult] = useState<string | null>(null);
 
@@ -92,7 +87,6 @@ export const DistinctionTab: React.FC = () => {
     },
   ];
 
-  // Self assessment questions
   const questions = [
     { id: 'q1', text: 'Thầy bói/đồng thầy đe dọa nếu bạn không làm lễ tiền triệu thì gia đình sẽ gặp đại nạn, tán gia bại sản?' },
     { id: 'q2', text: 'Có yêu cầu bạn phải chi trả chi phí bất minh hàng chục đến hàng trăm triệu cho một khóa hầu?' },
@@ -124,7 +118,7 @@ export const DistinctionTab: React.FC = () => {
   return (
     <div className="space-y-10">
       {/* Banner */}
-      <div className="bg-gradient-to-r from-[#881c1c] via-[#741515] to-[#591010] text-white p-6 sm:p-8 rounded-2xl shadow-xl border-2 border-amber-500/40">
+      <div className="bg-gradient-to-r from-[#881c1c] via-[#741515] to-[#591010] text-white p-5 sm:p-8 rounded-2xl shadow-xl border-2 border-amber-500/40">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-200 text-xs font-semibold mb-2 border border-rose-400/30">
           <ShieldAlert className="w-3.5 h-3.5 text-rose-300" />
           Bảo Vệ Tính Thiêng Của Di Sản UNESCO
@@ -132,22 +126,22 @@ export const DistinctionTab: React.FC = () => {
         <h2 className="text-2xl sm:text-3xl font-bold font-serif-culture text-amber-100">
           Phân Biệt Chuẩn Mực & Hành Vi Biến Tướng Trục Lợi
         </h2>
-        <p className="text-sm text-amber-100/80 mt-1 max-w-3xl leading-relaxed">
+        <p className="text-base text-amber-100/90 mt-2 max-w-3xl leading-relaxed">
           Hiện nay, sự pha tạp và thương mại hóa cực đoan đang làm méo mó giá trị nhân văn của Tín ngưỡng thờ Mẫu. Bảng đối chiếu dưới đây giúp cộng đồng nhận diện rõ ranh giới giữa niềm tin tâm linh chân chính và chiêu trò buôn thần bán thánh.
         </p>
       </div>
 
       {/* 5 Red Flags Section */}
-      <section className="bg-rose-50/70 border-2 border-rose-300 rounded-2xl p-6 sm:p-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-rose-600 text-white rounded-lg shadow">
+      <section className="bg-rose-50/70 border-2 border-rose-300 rounded-2xl p-5 sm:p-8">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="p-2 bg-rose-600 text-white rounded-lg shadow shrink-0">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div>
             <h3 className="text-lg sm:text-xl font-bold text-rose-950 font-serif-culture">
               5 Dấu Hiệu Cảnh Báo Đỏ Cần Cảnh Giác Ngay Lập Tức
             </h3>
-            <p className="text-xs sm:text-sm text-rose-800">
+            <p className="text-base text-rose-900 mt-1">
               Nhận diện các chiêu trò tâm lý thao túng để tránh bẫy nợ nần và mê tín dị đoan
             </p>
           </div>
@@ -184,8 +178,8 @@ export const DistinctionTab: React.FC = () => {
             <div key={flag.num} className="bg-white p-4 rounded-xl border border-rose-200 shadow-xs flex flex-col justify-between">
               <div>
                 <span className="text-xs font-black text-rose-600 block mb-1">DẤU HIỆU #{flag.num}</span>
-                <h4 className="font-bold text-gray-900 text-sm mb-1.5">{flag.title}</h4>
-                <p className="text-xs text-gray-600 leading-relaxed">{flag.desc}</p>
+                <h4 className="font-bold text-gray-900 text-lg mb-1.5">{flag.title}</h4>
+                <p className="text-base text-gray-700 leading-relaxed">{flag.desc}</p>
               </div>
             </div>
           ))}
@@ -198,34 +192,31 @@ export const DistinctionTab: React.FC = () => {
           <h3 className="text-xl sm:text-2xl font-bold font-serif-culture text-[#741515]">
             Bảng Đối Chiếu Song Song Toàn Diện
           </h3>
-          <p className="text-xs sm:text-sm text-gray-600 mt-1">
+          <p className="text-base text-gray-700 mt-1">
             So sánh trực quan giữa truyền thống ngàn đời và biến tướng thời hiện đại
           </p>
         </div>
 
         <div className="space-y-6">
           {comparisonData.map((item, idx) => (
-            <div 
+            <div
               key={idx}
               className="bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden"
             >
-              {/* Category Bar */}
-              <div className="bg-[#6b1414] text-amber-200 px-6 py-3 font-bold text-sm sm:text-base font-serif-culture flex items-center justify-between">
+              <div className="bg-[#6b1414] text-amber-200 px-5 sm:px-6 py-3.5 font-bold text-base sm:text-lg font-serif-culture flex flex-wrap items-center justify-between gap-2">
                 <span>{item.criterion}</span>
                 <span className="text-xs font-normal opacity-80">Bộ tiêu chuẩn di sản</span>
               </div>
 
-              {/* Grid 2 columns */}
               <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
-                {/* Authentic Column */}
-                <div className="p-6 bg-emerald-50/30">
+                <div className="p-5 sm:p-6 bg-emerald-50/30">
                   <div className="flex items-center gap-2 mb-3 text-emerald-800">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                    <h4 className="font-bold text-sm sm:text-base text-emerald-950">
+                    <h4 className="font-bold text-lg text-emerald-950">
                       {item.standard.title}
                     </h4>
                   </div>
-                  <ul className="space-y-2.5 text-xs sm:text-sm text-gray-700 leading-relaxed">
+                  <ul className="space-y-2.5 text-base text-gray-700 leading-relaxed">
                     {item.standard.points.map((p, pIdx) => (
                       <li key={pIdx} className="flex items-start gap-2">
                         <span className="text-emerald-600 font-bold mt-0.5">•</span>
@@ -235,15 +226,14 @@ export const DistinctionTab: React.FC = () => {
                   </ul>
                 </div>
 
-                {/* Deviant Column */}
-                <div className="p-6 bg-rose-50/40">
+                <div className="p-5 sm:p-6 bg-rose-50/40">
                   <div className="flex items-center gap-2 mb-3 text-rose-800">
                     <XCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
-                    <h4 className="font-bold text-sm sm:text-base text-rose-950">
+                    <h4 className="font-bold text-lg text-rose-950">
                       {item.deviant.title}
                     </h4>
                   </div>
-                  <ul className="space-y-2.5 text-xs sm:text-sm text-gray-700 leading-relaxed">
+                  <ul className="space-y-2.5 text-base text-gray-700 leading-relaxed">
                     {item.deviant.points.map((p, pIdx) => (
                       <li key={pIdx} className="flex items-start gap-2">
                         <span className="text-rose-600 font-bold mt-0.5">•</span>
@@ -259,7 +249,7 @@ export const DistinctionTab: React.FC = () => {
       </section>
 
       {/* Interactive Risk Assessment Tool */}
-      <section className="bg-white rounded-2xl border-2 border-amber-300 p-6 sm:p-8 shadow-md space-y-6">
+      <section className="bg-white rounded-2xl border-2 border-amber-300 p-5 sm:p-8 shadow-md space-y-6">
         <div className="border-b pb-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold mb-2">
             <Scale className="w-3.5 h-3.5 text-amber-700" />
@@ -268,26 +258,26 @@ export const DistinctionTab: React.FC = () => {
           <h3 className="text-xl font-bold font-serif-culture text-[#741515]">
             Bộ Câu Hỏi Nhận Diện Nguy Cơ Trục Lợi Tâm Linh
           </h3>
-          <p className="text-xs sm:text-sm text-gray-600 mt-1">
+          <p className="text-base text-gray-700 mt-1">
             Đánh dấu vào các câu hỏi dưới đây nếu bạn hoặc người thân đang gặp phải tình huống tương tự khi đi lễ hoặc tham gia khóa hầu:
           </p>
         </div>
 
         <div className="space-y-3">
           {questions.map((q) => (
-            <div 
+            <div
               key={q.id}
-              className="p-3.5 sm:p-4 rounded-xl bg-gray-50 border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              className="p-4 rounded-xl bg-gray-50 border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             >
               <div className="flex items-start gap-3">
-                <HelpCircle className="w-4 h-4 text-amber-700 mt-0.5 flex-shrink-0" />
-                <span className="text-xs sm:text-sm text-gray-800 font-medium">{q.text}</span>
+                <HelpCircle className="w-5 h-5 text-amber-700 mt-0.5 flex-shrink-0" />
+                <span className="text-base text-gray-800 font-medium">{q.text}</span>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-center">
+              <div className="flex flex-wrap items-center gap-2 flex-shrink-0 self-end sm:self-center">
                 <button
                   type="button"
                   onClick={() => handleAnswer(q.id, true)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`px-4 min-h-[44px] rounded-xl text-sm font-semibold transition-all ${
                     answers[q.id] === true
                       ? 'bg-rose-600 text-white shadow-xs'
                       : 'bg-white border text-gray-700 hover:bg-rose-50'
@@ -298,7 +288,7 @@ export const DistinctionTab: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleAnswer(q.id, false)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`px-4 min-h-[44px] rounded-xl text-sm font-semibold transition-all ${
                     answers[q.id] === false
                       ? 'bg-emerald-600 text-white shadow-xs'
                       : 'bg-white border text-gray-700 hover:bg-emerald-50'
@@ -315,19 +305,21 @@ export const DistinctionTab: React.FC = () => {
           <button
             type="button"
             onClick={evaluateRisk}
-            className="px-6 py-2.5 rounded-xl bg-[#881c1c] hover:bg-[#6b1414] text-white font-bold text-sm shadow-md transition-colors"
+            className="px-6 min-h-[44px] rounded-xl bg-[#881c1c] hover:bg-[#6b1414] text-white font-bold text-base shadow-md transition-colors"
           >
             Đánh Giá Mức Độ Nguy Cơ
           </button>
 
           {assessmentResult && (
-            <div className={`p-4 rounded-xl text-xs sm:text-sm font-medium flex-1 ${
-              assessmentResult.includes('NGUY HIỂM CAO')
-                ? 'bg-rose-100 text-rose-950 border border-rose-300'
-                : assessmentResult.includes('CẢNH GIÁC')
-                ? 'bg-amber-100 text-amber-950 border border-amber-300'
-                : 'bg-emerald-100 text-emerald-950 border border-emerald-300'
-            }`}>
+            <div
+              className={`p-4 rounded-xl text-base font-medium flex-1 leading-relaxed ${
+                assessmentResult.includes('NGUY HIỂM CAO')
+                  ? 'bg-rose-100 text-rose-950 border border-rose-300'
+                  : assessmentResult.includes('CẢNH GIÁC')
+                  ? 'bg-amber-100 text-amber-950 border border-amber-300'
+                  : 'bg-emerald-100 text-emerald-950 border border-emerald-300'
+              }`}
+            >
               {assessmentResult}
             </div>
           )}

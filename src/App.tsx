@@ -86,11 +86,11 @@ function AppContent() {
           break;
         case 'advisor':
           summaryTitle = 'AI Heritage & Legal Assistant';
-          summaryText = 'The smart assistant is powered by Gemini 3.8 Flash, grounded entirely in verified archival records from disan.json and state legal statutes to provide objective guidance without speculation.';
+          summaryText = 'The smart assistant uses Gemini grounded strictly in in-app archival records and legal statutes, replying clearly when information is unavailable.';
           break;
         case 'sources':
-          summaryTitle = 'Authoritative Verification Sources';
-          summaryText = 'Repository of eight verified scientific, academic, and state legal documents including UNESCO Nomination File 01064, Cultural Heritage Department decisions, and research by the late Professor Ngo Duc Thinh.';
+          summaryTitle = 'Sources and Acknowledgments';
+          summaryText = 'Repository of all data sources used in this application with publisher, year, URL, and contributor acknowledgments.';
           break;
         case 'about':
           summaryTitle = 'About the Project and Internship Declaration';
@@ -117,11 +117,11 @@ function AppContent() {
           break;
         case 'advisor':
           summaryTitle = 'Trợ lý Tra cứu Thông minh AI';
-          summaryText = 'Trợ lý thông minh vận hành bằng mô hình Gemini 3.8 Flash, tra cứu nghiêm ngặt và đối chiếu hoàn toàn dựa trên dữ liệu tệp disan.json và quy chuẩn pháp lý. Tuyệt đối không tự suy đoán ngoài tư liệu lưu trữ.';
+          summaryText = 'Trợ lý thông minh vận hành bằng mô hình Gemini phía máy chủ, trả lời hoàn toàn dựa trên dữ liệu có sẵn trong ứng dụng và luôn ghi kèm tên nguồn tư liệu đã dùng.';
           break;
         case 'sources':
-          summaryTitle = 'Trang Nguồn tư liệu Chính thống';
-          summaryText = 'Danh mục 8 nguồn tư liệu kiểm chứng học thuật và pháp lý bao gồm Hồ sơ UNESCO số 01064, Cục Di sản Văn hóa, Văn bản Luật Quốc gia, Nghị định 38 của Chính phủ và các công trình của Cố Giáo sư Ngô Đức Thịnh.';
+          summaryTitle = 'Trang Nguồn và Ghi nhận';
+          summaryText = 'Danh mục đầy đủ các nguồn tư liệu đang dùng gồm tên nguồn, đơn vị phát hành, năm, đường dẫn và mục ghi nhận người đóng góp tư liệu.';
           break;
         case 'about':
           summaryTitle = 'Giới thiệu Dự án và Bản quyền Thực tập';
@@ -134,13 +134,13 @@ function AppContent() {
   }, [activeTab, currentLang, records.length, speak, isSpeaking, stop]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fcfbf7] text-[#1f2937]">
+    <div className="min-h-screen flex flex-col bg-[#fcfbf7] text-[#1f2937] overflow-x-clip">
       {/* Top Header & Navigation */}
       <Header 
         activeTab={activeTab} 
         onTabChange={(tab) => {
           setActiveTab(tab);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          window.scrollTo({ top: 0, behavior: 'auto' });
         }} 
         totalRecords={records.length}
         currentLang={currentLang}
@@ -159,7 +159,7 @@ function AppContent() {
             currentLang={currentLang}
             onNavigateTab={(tab) => {
               setActiveTab(tab);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              window.scrollTo({ top: 0, behavior: 'auto' });
             }}
             onAddRecord={handleAddRecord}
           />
@@ -187,13 +187,18 @@ function AppContent() {
         activeTab={activeTab}
         onNavigateTab={(tab) => {
           setActiveTab(tab);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          window.scrollTo({ top: 0, behavior: 'auto' });
         }}
         onReadCurrentPage={handleReadCurrentPage}
       />
 
       {/* MANDATORY PERSISTENT SOURCE BLOCK - ALWAYS AT BOTTOM, NEVER HIDDEN */}
-      <FooterSourceBlock />
+      <FooterSourceBlock
+        onOpenSourcesPage={() => {
+          setActiveTab('sources');
+          window.scrollTo({ top: 0, behavior: 'auto' });
+        }}
+      />
     </div>
   );
 }

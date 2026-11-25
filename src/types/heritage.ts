@@ -33,12 +33,15 @@ export interface ChatMessage {
   referencedRecord?: string;
   referencedSource?: string;
   isWarning?: boolean;
+  isAiGenerated?: boolean;
+  isUnverified?: boolean;
 }
 
 export interface SourceReference {
   id: string;
   title: string;
-  author: string;
+  publisher: string;
+  year: string;
   type: 'chinh_thong' | 'hoc_thuat' | 'bao_tang_vien';
   typeLabel: string;
   description: string;
